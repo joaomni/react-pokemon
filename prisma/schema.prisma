@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id         String       @id @default(uuid()) @map("_id") @db.ObjectId
+  username   String       @unique
+  password   String
+  coins      Int
+  xp         Int?
+  since      DateTime
+  statistics Statistics[]
+  Captured   Captured[]
+  Item       Item[]
+  Conquest   Conquest[]
+  Team       Team[]
+  Friend     Friend[]
+  Trade      Trade[]
+  Offer      Offer[]
+  Transfer   Transfer[]
+}
+
+type Statistics {
+  wins    Int?
+  deaths  Int?
+  battles Int?
+}
+
+model Captured {
+  id        String    @id @default(uuid()) @map("_id") @db.ObjectId
+  pokemon   String
+  hp        Int
+  level     Int
+  xp        Int
+  shiny     Boolean?
+  attacks   Attacks[]
+  sprite    String
+  trainerId String    @db.ObjectId
+  trainer   Profile   @relation(fields: [trainerId], references: [id])
+  Team      Team[]
+  Trade     Trade[]
+  Offer     Offer[]
+}
+
+type Attacks {
+  first  Int?
+  second Int?
+  third  Int?
+  fourth Int?
+}
+
+model Team {
+  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  trainerId  String   @db.ObjectId
+  trainer    Profile  @relation(fields: [trainerId], references: [id])
+  pokemonsId String[] @db.ObjectId
+  pokemons   Captured @relation(fields: [pokemonsId], references: [id])
+}
+
+model Item {
+  id        String  @id @default(uuid()) @map("_id") @db.ObjectId
+  item      String
+  sprite    String
+  amount    Int
+  trainerId String  @db.ObjectId
+  trainer   Profile @relation(fields: [trainerId], references: [id])
+}
+
+model Conquest {
+  id        String      @id @default(uuid()) @map("_id") @db.ObjectId
+  challenge Challenge[]
+  title     String
+  region    String
+  trainerId String      @db.ObjectId
+  trainer   Profile     @relation(fields: [trainerId], references: [id])
+}
+
+type Challenge {
+  insignia Boolean @default(false)
+  elite4   Boolean @default(false)
+  frontier Boolean @default(false)
+}
+
+model Trade {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  date      DateTime @default(now())
+  trainerId String   @db.ObjectId
+  trainer   Profile  @relation(fields: [trainerId], references: [id])
+  pokemonId String   @db.ObjectId
+  pokemon   Captured @relation(fields: [pokemonId], references: [id])
+  Offer     Offer[]
+}
+
+model Offer {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  date      DateTime @default(now())
+  tradeId   String   @db.ObjectId
+  trade     Trade    @relation(fields: [tradeId], references: [id])
+  pokemonId String   @db.ObjectId
+  pokemon   Captured @relation(fields: [pokemonId], references: [id])
+  trainerId String   @db.ObjectId
+  trainer   Profile  @relation(fields: [trainerId], references: [id])
+}
+
+model Transfer {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  coins     Int
+  date      DateTime @default(now())
+  trainerId String   @db.ObjectId
+  trainer   Profile  @relation(fields: [trainerId], references: [id])
+}
+
+model Friend {
+  id        String    @id @map("_id") @db.ObjectId
+  profileId String    @db.ObjectId
+  profile   Profile   @relation(fields: [profileId], references: [id])
+  message   Message[]
+}
+
+type Message {
+  id   Int?
+  text String?
+}
